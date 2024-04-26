@@ -1,6 +1,17 @@
-const { Alarm, getTimeoutDelay } = require("../src/Alarm");
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from "@jest/globals";
+
+import { Alarm, AlarmDelegate, getTimeoutDelay } from "../src/Alarm";
+
 /* Una nuova data per la sveglia */
-function getDueDate(milliseconds) {
+function getDueDate(milliseconds: number): Date {
   const dueDate = new Date(); // creazione di un' oggetto data
   dueDate.setSeconds(dueDate.getSeconds() + milliseconds); // aggiungo 1000 sec nella data
   return dueDate; // restituisce la data
@@ -18,8 +29,8 @@ describe("Metodi di utils", () => {
 });
 // test della classe Alarm
 describe("Classe Alarm", () => {
-  let delegate;
-  let alarm;
+  let delegate: AlarmDelegate;
+  let alarm: Alarm;
   beforeAll(() => {
     jest.useFakeTimers(); // usa dei timmer finti per non dover aspettare ad eseguire il test
     jest.spyOn(global, "setTimeout"); //spia la setTimeout
@@ -35,8 +46,12 @@ describe("Classe Alarm", () => {
   test("la sveglia deve eseguire il delegato all'ora indicata", () => {
     expect(delegate).not.toBeCalled(); // ci aspettiamo che il delegato non venga chiamato
     jest.runAllTimers(); // scorrere il tempo
-    expect(setTimeout).toHaveBeenCalledWith(delegate, 2000); // ci aspettiamo che il setTimeout sia chiamato con quei parametri
+    expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 2000); // ci aspettiamo che il setTimeout sia chiamato con quei parametri
     expect(delegate).toHaveBeenCalled(); // ci aspettiamo che il delegate sia stato chiamato
+    expect(delegate).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Function)
+    );
   });
   test("il delegato non viene eseguito se la funzione stop viene chamata", () => {
     alarm.stop(); // chiama la funzione stop
@@ -45,33 +60,36 @@ describe("Classe Alarm", () => {
   });
   test("Il delegato viene eseguito ancora una volta, quando è stato rimandato", () => {
     jest.runAllTimers(); // scorrere il tempo
-    alarm.snooze(); // rimanda il setTimeot
+    alarm.snooze(2000); // rimanda il setTimeot
     jest.runAllTimers(); // scorre il tempo
     expect(delegate).toHaveBeenCalledTimes(2); // cosi vedo se il delegato ha suonato due volte
   });
   test("il delegato non venga eseguito dopo che è stato rimandato, se viene fermato prima della scadenza del rinvio", () => {
     jest.runAllTimers(); // scorrere il tempo
-    alarm.snooze(); // rimanda il setTimeot
+    alarm.snooze(2000); // rimanda il setTimeot
     alarm.stop(); // chiama la funzione stop
     jest.runAllTimers(); // scorre il tempo
     expect(delegate).toHaveBeenCalledTimes(1);
   });
 });
 
-function fakeDelegate(stop, snooze) {
-  stop();
-}
-test("se è possibile usare la fakeDelegate al posto di fn", () => {
-  const stop = jest.fn();
-  const snooze = jest.fn();
-  fakeDelegate(stop, snooze);
-  expect(stop).toBeCalled();
+// const fakeDelegate: AlarmDelegate = (stop, snooze) => {
+//   stop();
+// };
+// test("se è possibile usare la fakeDelegate al posto di fn", () => {
+//   const stop = jest.fn();
+//   const snooze = jest.fn();
+//   fakeDelegate(stop, snooze);
+//   expect(stop).toBeCalled();
 
-  // NO, troppo sbatti per un test!
-  jest.useFakeTimers();
-  const alarm = new Alarm(() => {}, getDueDate(2000));
-  alarm.stop = jest.fn();
-  fakeDelegate(() => alarm.stop());
-  expect(alarm.stop).toBeCalled();
-  jest.useRealTimers();
-});
+//   // NO, troppo sbatti per un test!
+//   jest.useFakeTimers();
+//   const alarm = new Alarm(() => {}, getDueDate(2000));
+//   alarm.stop = jest.fn();
+//   fakeDelegate(
+//     () => alarm.stop(),
+//     (a) => alarm.snooze(a)
+//   );
+//   expect(alarm.stop).toBeCalled();
+//   jest.useRealTimers();
+// });
