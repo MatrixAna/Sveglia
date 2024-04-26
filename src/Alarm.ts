@@ -2,7 +2,7 @@
 export function getTimeoutDelay(dueDate: Date): number {
   return Math.round((dueDate.getTime() - Date.now()) / 1000); // data stimata per la sveglia - la data di adesso = tempo che deve intercorrere
 }
-
+//creato il tipo AlarmDelegate per poter utilizzare senza dover riscrivere ogni volta tutti paramentri
 export type AlarmDelegate = (
   stop: () => void,
   snooze: (delay: number) => void
@@ -10,7 +10,7 @@ export type AlarmDelegate = (
 
 export class Alarm {
   private _delegate: AlarmDelegate;
-  private _timeout?: ReturnType<typeof setTimeout>;
+  private _timeout?: ReturnType<typeof setTimeout>; // restituisce il tipo del timeout qualsiasi esso sia
 
   public constructor(delegate: AlarmDelegate, dueDate: Date) {
     const delay = getTimeoutDelay(dueDate);
@@ -21,12 +21,12 @@ export class Alarm {
   public stop() {
     clearTimeout(this._timeout);
     delete this._timeout;
-    // this._timeout = undefined;
+    // this._timeout = undefined; // sarebbe equivalente alla delete
   }
   public snooze(delay: number) {
-    this._schedule(delay);
+    this._schedule(delay); //reimposta il timeout
   }
-
+  // permette di accedere ai metodi stop e snooze
   private _schedule(delay: number) {
     this._timeout = setTimeout(
       () =>
